@@ -19,12 +19,7 @@ const TopMenu = React.memo((props: Props) => {
   return (
     <div className="top-header-menu">
       <div className="top-header-left-frame-crossword-game">
-        <Link
-          to="/"
-          onClick={() => {
-            resetStore();
-          }}
-        >
+        <Link to="/" onClick={resetStore}>
           OMGWords
         </Link>
       </div>
@@ -35,12 +30,7 @@ const TopMenu = React.memo((props: Props) => {
         <a href="http://randomracer.com">Random.Racer</a>
       </div>
       <div className="top-header-left-frame-special-land">
-        <Link
-          to="/about"
-          onClick={() => {
-            resetStore();
-          }}
-        >
+        <Link to="/about" onClick={resetStore}>
           About Us
         </Link>
       </div>
@@ -83,9 +73,7 @@ export const TopBar = React.memo((props: Props) => {
         <Link
           className="plain"
           to={`/profile/${encodeURIComponent(username)}`}
-          onClick={() => {
-            resetStore();
-          }}
+          onClick={resetStore}
         >
           View Profile
         </Link>
@@ -103,13 +91,7 @@ export const TopBar = React.memo((props: Props) => {
           color={colors.colorPrimary}
           title={`Latency: ${currentLagMs || '...'} ms.`}
         >
-          <Link
-            to="/"
-            className="site-icon"
-            onClick={() => {
-              resetStore();
-            }}
-          >
+          <Link to="/" className="site-icon" onClick={resetStore}>
             <div className="top-header-site-icon-rect">
               <div className="top-header-site-icon-m">W</div>
             </div>
@@ -145,12 +127,7 @@ export const TopBar = React.memo((props: Props) => {
             >
               Log In
             </button>
-            <Link
-              to="/register"
-              onClick={() => {
-                resetStore();
-              }}
-            >
+            <Link to="/register" onClick={resetStore}>
               <button className="primary">Sign Up</button>
             </Link>
             <Modal
