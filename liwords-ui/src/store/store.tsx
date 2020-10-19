@@ -552,6 +552,11 @@ const RealStore = ({ children, ...props }: Props) => {
     activeGames: [],
     matchRequests: [],
   });
+  const dispatchLobbyContextIfStillMounted = useCallback((v) => {
+    if (stillMountedRef.current) {
+      dispatchLobbyContext(v);
+    }
+  }, []);
   const [loginState, dispatchLoginState] = useReducer(LoginStateReducer, {
     username: '',
     userID: '',
@@ -559,6 +564,11 @@ const RealStore = ({ children, ...props }: Props) => {
     connectedToSocket: false,
     connID: '',
   });
+  const dispatchLoginStateIfStillMounted = useCallback((v) => {
+    if (stillMountedRef.current) {
+      dispatchLoginState(v);
+    }
+  }, []);
   const [currentLagMs, setCurrentLagMs] = useState(NaN);
   const setCurrentLagMsIfStillMounted = useCallback((v) => {
     if (stillMountedRef.current) {
@@ -569,6 +579,11 @@ const RealStore = ({ children, ...props }: Props) => {
   const [gameContext, dispatchGameContext] = useReducer(GameReducer, null, () =>
     gameStateInitializer(clockController, onClockTick, onClockTimeout)
   );
+  const dispatchGameContextIfStillMounted = useCallback((v) => {
+    if (stillMountedRef.current) {
+      dispatchGameContext(v);
+    }
+  }, []);
 
   const [timerContext, setTimerContext] = useState<Times>(defaultTimerContext);
   const [pTimedOut, setPTimedOut] = useState<PlayerOrder | undefined>(
@@ -701,7 +716,7 @@ const RealStore = ({ children, ...props }: Props) => {
     <LobbyContext.Provider
       value={{
         lobbyContext,
-        dispatchLobbyContext,
+        dispatchLobbyContext: dispatchLobbyContextIfStillMounted,
       }}
       children={ret}
     />
@@ -710,7 +725,7 @@ const RealStore = ({ children, ...props }: Props) => {
     <LoginStateContext.Provider
       value={{
         loginState,
-        dispatchLoginState,
+        dispatchLoginState: dispatchLoginStateIfStillMounted,
       }}
       children={ret}
     />
@@ -754,7 +769,7 @@ const RealStore = ({ children, ...props }: Props) => {
     <GameContextContext.Provider
       value={{
         gameContext,
-        dispatchGameContext,
+        dispatchGameContext: dispatchGameContextIfStillMounted,
       }}
       children={ret}
     />
@@ -828,8 +843,16 @@ const ResetStoreContext = createContext({ resetStore: defaultFunction });
 export const useResetStoreContext = () => useContext(ResetStoreContext);
 
 export const Store = ({ children }: { children: React.ReactNode }) => {
+  const stillMountedRef = React.useRef(true);
+  React.useEffect(() => () => void (stillMountedRef.current = false), []);
+
   // In JS the | 0 loops within int32 and avoids reaching Number.MAX_SAFE_INTEGER.
   const [storeId, resetStore] = React.useReducer((n) => (n + 1) | 0, 0);
+  const resetStoreIfStillMounted = useCallback(() => {
+    if (stillMountedRef.current) {
+      resetStore();
+    }
+  }, []);
 
   // Reset on browser navigation.
   React.useEffect(() => {
@@ -843,7 +866,9 @@ export const Store = ({ children }: { children: React.ReactNode }) => {
   }, [resetStore]);
 
   return (
-    <ResetStoreContext.Provider value={{ resetStore }}>
+    <ResetStoreContext.Provider
+      value={{ resetStore: resetStoreIfStillMounted }}
+    >
       <RealStore key={storeId} children={children} />
     </ResetStoreContext.Provider>
   );
