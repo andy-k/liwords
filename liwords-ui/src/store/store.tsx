@@ -292,6 +292,9 @@ const gameStateInitializer = (
 const doNothing = () => {}; // defaultFunction currently is the same as this.
 
 const ExaminableStore = ({ children }: { children: React.ReactNode }) => {
+  const stillMountedRef = React.useRef(true);
+  React.useEffect(() => () => void (stillMountedRef.current = false), []);
+
   const gameContextStore = useGameContextStoreContext();
   const gameEndMessageStore = useGameEndMessageStoreContext();
   const timerStore = useTimerStoreContext();
@@ -301,29 +304,45 @@ const ExaminableStore = ({ children }: { children: React.ReactNode }) => {
   const [isExamining, setIsExamining] = useState(false);
   const [examinedTurn, setExaminedTurn] = useState(Infinity);
   const handleExamineStart = useCallback(() => {
-    setIsExamining(true);
+    if (stillMountedRef.current) {
+      setIsExamining(true);
+    }
   }, []);
   const handleExamineEnd = useCallback(() => {
-    setIsExamining(false);
+    if (stillMountedRef.current) {
+      setIsExamining(false);
+    }
   }, []);
   const handleExamineFirst = useCallback(() => {
-    setExaminedTurn(0);
+    if (stillMountedRef.current) {
+      setExaminedTurn(0);
+    }
   }, []);
   const handleExaminePrev = useCallback(() => {
-    setExaminedTurn((x) => Math.max(Math.min(x, numberOfTurns) - 1, 0));
+    if (stillMountedRef.current) {
+      setExaminedTurn((x) => Math.max(Math.min(x, numberOfTurns) - 1, 0));
+    }
   }, [numberOfTurns]);
   const handleExamineNext = useCallback(() => {
-    setExaminedTurn((x) => (x >= numberOfTurns - 1 ? Infinity : x + 1));
+    if (stillMountedRef.current) {
+      setExaminedTurn((x) => (x >= numberOfTurns - 1 ? Infinity : x + 1));
+    }
   }, [numberOfTurns]);
   const handleExamineLast = useCallback(() => {
-    setExaminedTurn(Infinity);
+    if (stillMountedRef.current) {
+      setExaminedTurn(Infinity);
+    }
   }, []);
   const handleExamineGoTo = useCallback(
     (x) => {
       if (x >= numberOfTurns) {
-        setExaminedTurn(Infinity);
+        if (stillMountedRef.current) {
+          setExaminedTurn(Infinity);
+        }
       } else {
-        setExaminedTurn(Math.max(Math.min(x, numberOfTurns), 0));
+        if (stillMountedRef.current) {
+          setExaminedTurn(Math.max(Math.min(x, numberOfTurns), 0));
+        }
       }
     },
     [numberOfTurns]
@@ -541,6 +560,11 @@ const RealStore = ({ children, ...props }: Props) => {
     connID: '',
   });
   const [currentLagMs, setCurrentLagMs] = useState(NaN);
+  const setCurrentLagMsIfStillMounted = useCallback((v) => {
+    if (stillMountedRef.current) {
+      setCurrentLagMs(v);
+    }
+  }, []);
 
   const [gameContext, dispatchGameContext] = useReducer(GameReducer, null, () =>
     gameStateInitializer(clockController, onClockTick, onClockTimeout)
@@ -554,30 +578,57 @@ const RealStore = ({ children, ...props }: Props) => {
   const [poolFormat, setPoolFormat] = useState<PoolFormatType>(
     PoolFormatType.Alphabet
   );
+  const setPoolFormatIfStillMounted = useCallback((v) => {
+    if (stillMountedRef.current) {
+      setPoolFormat(v);
+    }
+  }, []);
 
   const [redirGame, setRedirGame] = useState('');
+  const setRedirGameIfStillMounted = useCallback((v) => {
+    if (stillMountedRef.current) {
+      setRedirGame(v);
+    }
+  }, []);
   const [gameEndMessage, setGameEndMessage] = useState('');
+  const setGameEndMessageIfStillMounted = useCallback((v) => {
+    if (stillMountedRef.current) {
+      setGameEndMessage(v);
+    }
+  }, []);
   const [rematchRequest, setRematchRequest] = useState(new MatchRequest());
+  const setRematchRequestIfStillMounted = useCallback((v) => {
+    if (stillMountedRef.current) {
+      setRematchRequest(v);
+    }
+  }, []);
   const [chat, setChat] = useState(new Array<ChatEntityObj>());
   const [excludedPlayers, setExcludedPlayers] = useState(new Set<string>());
+  const setExcludedPlayersIfStillMounted = useCallback((v) => {
+    if (stillMountedRef.current) {
+      setExcludedPlayers(v);
+    }
+  }, []);
   const [presences, setPresences] = useState(
     {} as { [uuid: string]: PresenceEntity }
   );
 
   const addChat = useCallback((entity: ChatEntityObj) => {
-    setChat((oldChat) => {
-      if (!entity.id) {
-        // eslint-disable-next-line no-param-reassign
-        entity.id = randomID();
-      }
-      // XXX: This should be sped up.
-      const chatCopy = [...oldChat];
-      chatCopy.push(entity);
-      if (chatCopy.length > MaxChatLength) {
-        chatCopy.shift();
-      }
-      return chatCopy;
-    });
+    if (stillMountedRef.current) {
+      setChat((oldChat) => {
+        if (!entity.id) {
+          // eslint-disable-next-line no-param-reassign
+          entity.id = randomID();
+        }
+        // XXX: This should be sped up.
+        const chatCopy = [...oldChat];
+        chatCopy.push(entity);
+        if (chatCopy.length > MaxChatLength) {
+          chatCopy.shift();
+        }
+        return chatCopy;
+      });
+    }
   }, []);
 
   const challengeResultEvent = useCallback(
@@ -596,25 +647,31 @@ const RealStore = ({ children, ...props }: Props) => {
   );
 
   const addChats = useCallback((entities: Array<ChatEntityObj>) => {
-    setChat([...entities]);
+    if (stillMountedRef.current) {
+      setChat([...entities]);
+    }
   }, []);
 
   const clearChat = useCallback(() => {
-    setChat([]);
+    if (stillMountedRef.current) {
+      setChat([]);
+    }
   }, []);
 
   const setPresence = useCallback((entity: PresenceEntity) => {
     // XXX: This looks slow.
-    setPresences((prevPresences) => {
-      const presencesCopy = { ...prevPresences };
-      if (entity.channel === '') {
-        // This user signed off; remove
-        delete presencesCopy[entity.uuid];
-      } else {
-        presencesCopy[entity.uuid] = entity;
-      }
-      return presencesCopy;
-    });
+    if (stillMountedRef.current) {
+      setPresences((prevPresences) => {
+        const presencesCopy = { ...prevPresences };
+        if (entity.channel === '') {
+          // This user signed off; remove
+          delete presencesCopy[entity.uuid];
+        } else {
+          presencesCopy[entity.uuid] = entity;
+        }
+        return presencesCopy;
+      });
+    }
   }, []);
 
   const addPresences = useCallback((entities: Array<PresenceEntity>) => {
@@ -624,7 +681,9 @@ const RealStore = ({ children, ...props }: Props) => {
     });
     console.log('in addPresences', presencesCopy);
 
-    setPresences(presencesCopy);
+    if (stillMountedRef.current) {
+      setPresences(presencesCopy);
+    }
   }, []);
 
   const stopClock = useCallback(() => {
@@ -632,7 +691,9 @@ const RealStore = ({ children, ...props }: Props) => {
       return;
     }
     clockController.current.stopClock();
-    setTimerContext({ ...clockController.current.times });
+    if (stillMountedRef.current) {
+      setTimerContext({ ...clockController.current.times });
+    }
   }, []);
 
   let ret = <ExaminableStore children={children} />;
@@ -658,7 +719,7 @@ const RealStore = ({ children, ...props }: Props) => {
     <LagContext.Provider
       value={{
         currentLagMs,
-        setCurrentLagMs,
+        setCurrentLagMs: setCurrentLagMsIfStillMounted,
       }}
       children={ret}
     />
@@ -667,7 +728,7 @@ const RealStore = ({ children, ...props }: Props) => {
     <ExcludedPlayersContext.Provider
       value={{
         excludedPlayers,
-        setExcludedPlayers,
+        setExcludedPlayers: setExcludedPlayersIfStillMounted,
       }}
       children={ret}
     />
@@ -676,7 +737,7 @@ const RealStore = ({ children, ...props }: Props) => {
     <RedirGameContext.Provider
       value={{
         redirGame,
-        setRedirGame,
+        setRedirGame: setRedirGameIfStillMounted,
       }}
       children={ret}
     />
@@ -723,7 +784,7 @@ const RealStore = ({ children, ...props }: Props) => {
     <GameEndMessageContext.Provider
       value={{
         gameEndMessage,
-        setGameEndMessage,
+        setGameEndMessage: setGameEndMessageIfStillMounted,
       }}
       children={ret}
     />
@@ -732,7 +793,7 @@ const RealStore = ({ children, ...props }: Props) => {
     <RematchRequestContext.Provider
       value={{
         rematchRequest,
-        setRematchRequest,
+        setRematchRequest: setRematchRequestIfStillMounted,
       }}
       children={ret}
     />
@@ -753,7 +814,7 @@ const RealStore = ({ children, ...props }: Props) => {
     <PoolFormatContext.Provider
       value={{
         poolFormat,
-        setPoolFormat,
+        setPoolFormat: setPoolFormatIfStillMounted,
       }}
       children={ret}
     />

@@ -27,6 +27,9 @@ export const DrawingHandlersSetterContext = React.createContext(
 );
 
 export const useDrawing = () => {
+  const stillMountedRef = React.useRef(true);
+  React.useEffect(() => () => void (stillMountedRef.current = false), []);
+
   // Drawing functionalities.
   // Right-drag = draw.
   // RightClick several times = clear drawing.
@@ -48,12 +51,14 @@ export const useDrawing = () => {
     const boardElt = boardEltRef.current;
     if (boardElt) {
       const { left, top, width, height } = boardElt.getBoundingClientRect();
-      setBoardSize({
-        left,
-        top,
-        width: Math.max(1, width),
-        height: Math.max(1, height),
-      });
+      if (stillMountedRef.current) {
+        setBoardSize({
+          left,
+          top,
+          width: Math.max(1, width),
+          height: Math.max(1, height),
+        });
+      }
     }
   }, []);
   const boardRef = React.useCallback(
@@ -199,14 +204,16 @@ export const useDrawing = () => {
       </React.Fragment>
     );
 
-    setCurrentDrawing(ret);
+    if (stillMountedRef.current) {
+      setCurrentDrawing(ret);
 
-    setPenColor((x) => {
-      if (x === 'erase' && strokesRef.current.length === 0) {
-        return 'red'; // Deactivate eraser when no drawing.
-      }
-      return x;
-    });
+      setPenColor((x) => {
+        if (x === 'erase' && strokesRef.current.length === 0) {
+          return 'red'; // Deactivate eraser when no drawing.
+        }
+        return x;
+      });
+    }
   }, [scaledXYStr, boardSize.width, boardSize.height]);
 
   const scheduleRepaint = React.useCallback(() => {
@@ -322,22 +329,34 @@ export const useDrawing = () => {
       const key = evt.key.toUpperCase();
       if (key === '0') {
         // Toggle drawing.
-        setIsEnabled((x) => !x);
+        if (stillMountedRef.current) {
+          setIsEnabled((x) => !x);
+        }
       } else if (isEnabled) {
         if (key === 'R') {
-          setPenColor('red');
+          if (stillMountedRef.current) {
+            setPenColor('red');
+          }
         }
         if (key === 'G') {
-          setPenColor('green');
+          if (stillMountedRef.current) {
+            setPenColor('green');
+          }
         }
         if (key === 'B') {
-          setPenColor('blue');
+          if (stillMountedRef.current) {
+            setPenColor('blue');
+          }
         }
         if (key === 'Y') {
-          setPenColor('yellow');
+          if (stillMountedRef.current) {
+            setPenColor('yellow');
+          }
         }
         if (key === 'E') {
-          setPenColor('erase');
+          if (stillMountedRef.current) {
+            setPenColor('erase');
+          }
         }
         if (key === 'U') {
           // Undo.

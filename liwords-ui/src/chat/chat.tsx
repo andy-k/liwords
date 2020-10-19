@@ -19,6 +19,9 @@ type Props = {
 };
 
 export const Chat = React.memo((props: Props) => {
+  const stillMountedRef = React.useRef(true);
+  React.useEffect(() => () => void (stillMountedRef.current = false), []);
+
   const [curMsg, setCurMsg] = useState('');
   const [hasScroll, setHasScroll] = useState(false);
   const [selectedChatTab, setSelectedChatTab] = useState('CHAT');
@@ -30,7 +33,9 @@ export const Chat = React.memo((props: Props) => {
       e.preventDefault();
       // Send if non-trivial
       const msg = curMsg.trim();
-      setCurMsg('');
+      if (stillMountedRef.current) {
+        setCurMsg('');
+      }
 
       if (msg === '') {
         return;
@@ -40,7 +45,9 @@ export const Chat = React.memo((props: Props) => {
   };
 
   const onChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setCurMsg(e.target.value);
+    if (stillMountedRef.current) {
+      setCurMsg(e.target.value);
+    }
   };
   const knownUsers =
     Object.keys(props.presences).filter((p) => !props.presences[p].anon) || [];
@@ -49,7 +56,9 @@ export const Chat = React.memo((props: Props) => {
     const tabContainer = el.current;
     if (tabContainer && selectedChatTab === 'CHAT') {
       if (tabContainer.scrollHeight > tabContainer.clientHeight) {
-        setHasScroll(true);
+        if (stillMountedRef.current) {
+          setHasScroll(true);
+        }
       }
       tabContainer.scrollTop = tabContainer.scrollHeight || 0;
     }
@@ -75,7 +84,9 @@ export const Chat = React.memo((props: Props) => {
         defaultActiveKey="CHAT"
         centered
         onTabClick={(key) => {
-          setSelectedChatTab(key);
+          if (stillMountedRef.current) {
+            setSelectedChatTab(key);
+          }
         }}
       >
         {/* TabPane for available players to chat with goes here:
@@ -99,7 +110,9 @@ export const Chat = React.memo((props: Props) => {
                     <span
                       className="list-trigger"
                       onClick={() => {
-                        setPresenceVisible(false);
+                        if (stillMountedRef.current) {
+                          setPresenceVisible(false);
+                        }
                       }}
                     >
                       Hide list
@@ -108,7 +121,9 @@ export const Chat = React.memo((props: Props) => {
                     <span
                       className="list-trigger"
                       onClick={() => {
-                        setPresenceVisible(true);
+                        if (stillMountedRef.current) {
+                          setPresenceVisible(true);
+                        }
                       }}
                     >
                       Show list

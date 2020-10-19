@@ -30,7 +30,9 @@ export const PasswordChange = (props: Props) => {
   const [err, setErr] = useState('');
   const onFinish = (values: { [key: string]: string }) => {
     if (values.newPassword !== values.confirmnewPassword) {
-      setErr('New passwords must match');
+      if (stillMountedRef.current) {
+        setErr('New passwords must match');
+      }
       return;
     }
 

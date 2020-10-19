@@ -214,6 +214,9 @@ const ScorecardTurn = (props: turnProps) => {
 };
 
 export const ScoreCard = React.memo((props: Props) => {
+  const stillMountedRef = React.useRef(true);
+  React.useEffect(() => () => void (stillMountedRef.current = false), []);
+
   const el = useRef<HTMLDivElement>(null);
   const notepad = useRef<HTMLTextAreaElement>(null);
   const [cardHeight, setCardHeight] = useState(0);
@@ -230,14 +233,16 @@ export const ScoreCard = React.memo((props: Props) => {
         document.getElementById('player-cards')?.clientHeight || 0;
       const navHeight = document.getElementById('main-nav')?.clientHeight || 0;
       if (boardHeight) {
-        setCardHeight(
-          boardHeight -
-            currentEl?.getBoundingClientRect().top -
-            poolTop -
-            playerCardTop -
-            15 +
-            navHeight
-        );
+        if (stillMountedRef.current) {
+          setCardHeight(
+            boardHeight -
+              currentEl?.getBoundingClientRect().top -
+              poolTop -
+              playerCardTop -
+              15 +
+              navHeight
+          );
+        }
       }
     }
   };
@@ -282,9 +287,13 @@ export const ScoreCard = React.memo((props: Props) => {
           className="link"
           onClick={() => {
             if (notepadVisible) {
-              setNotepadVisible(false);
+              if (stillMountedRef.current) {
+                setNotepadVisible(false);
+              }
             } else {
-              setNotepadVisible(true);
+              if (stillMountedRef.current) {
+                setNotepadVisible(true);
+              }
             }
           }}
         >
@@ -302,7 +311,9 @@ export const ScoreCard = React.memo((props: Props) => {
               spellCheck={false}
               style={notepadStyle}
               onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => {
-                setCurNotepad(e.target.value);
+                if (stillMountedRef.current) {
+                  setCurNotepad(e.target.value);
+                }
               }}
             />
           </div>

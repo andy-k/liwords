@@ -179,7 +179,9 @@ export const Table = React.memo((props: Props) => {
 
     return () => {
       clearChat();
-      setGameInfo(defaultGameInfo);
+      if (stillMountedRef.current) {
+        setGameInfo(defaultGameInfo);
+      }
       message.destroy();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -252,7 +254,9 @@ export const Table = React.memo((props: Props) => {
         observer = false;
       }
     });
-    setIsObserver(observer);
+    if (stillMountedRef.current) {
+      setIsObserver(observer);
+    }
 
     // If we are not the observer, tell the server we're ready for the game to start.
     if (gameInfo.game_end_reason === 'NONE' && !observer) {

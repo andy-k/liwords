@@ -72,7 +72,9 @@ export const ExchangeTiles = React.memo((props: Props) => {
           }
         }
       }
-      setExchangedRackIndices(tempToExchange);
+      if (stillMountedRef.current) {
+        setExchangedRackIndices(tempToExchange);
+      }
     },
     [
       delayInput,
@@ -105,7 +107,9 @@ export const ExchangeTiles = React.memo((props: Props) => {
     const indices = Array.from(exchangedRackIndices.keys());
     indices.sort();
     const e = indices.map((idx) => props.rack[idx]);
-    setExchangedRack(e.join(''));
+    if (stillMountedRef.current) {
+      setExchangedRack(e.join(''));
+    }
   }, [exchangedRackIndices, props.rack]);
   const { gameContext } = useGameContextStoreContext();
   const { setPoolFormat } = usePoolFormatStoreContext();
@@ -117,7 +121,9 @@ export const ExchangeTiles = React.memo((props: Props) => {
       } else {
         newExchangedRackIndices.add(idx);
       }
-      setExchangedRackIndices(newExchangedRackIndices);
+      if (stillMountedRef.current) {
+        setExchangedRackIndices(newExchangedRackIndices);
+      }
     },
     [exchangedRackIndices]
   );

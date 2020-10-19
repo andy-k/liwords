@@ -114,7 +114,9 @@ export const LiwordsSocket = (props: {
           actionType: ActionType.SetConnectedToSocket,
           payload: true,
         });
-        setJustDisconnected(false);
+        if (stillMountedRef.current) {
+          setJustDisconnected(false);
+        }
       },
       onClose: () => {
         console.log('disconnected from socket :(');
@@ -122,7 +124,9 @@ export const LiwordsSocket = (props: {
           actionType: ActionType.SetConnectedToSocket,
           payload: false,
         });
-        setJustDisconnected(true);
+        if (stillMountedRef.current) {
+          setJustDisconnected(true);
+        }
       },
       retryOnError: true,
       shouldReconnect: (closeEvent) => true,

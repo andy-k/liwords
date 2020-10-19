@@ -54,11 +54,16 @@ type TileProps = {
 };
 
 const Tile = React.memo((props: TileProps) => {
+  const stillMountedRef = React.useRef(true);
+  React.useEffect(() => () => void (stillMountedRef.current = false), []);
+
   const [isDragging, setIsDragging] = useState(false);
 
   const handleStartDrag = (e: any) => {
     if (e) {
-      setIsDragging(true);
+      if (stillMountedRef.current) {
+        setIsDragging(true);
+      }
       e.dataTransfer.dropEffect = 'move';
       if (
         props.tentative &&
@@ -73,7 +78,9 @@ const Tile = React.memo((props: TileProps) => {
   };
 
   const handleEndDrag = () => {
-    setIsDragging(false);
+    if (stillMountedRef.current) {
+      setIsDragging(false);
+    }
   };
 
   const handleDrop = (e: any) => {

@@ -43,17 +43,23 @@ const App = React.memo(() => {
   const history = useHistory();
   useEffect(() => {
     if (redirGame !== '') {
-      setRedirGame('');
+      if (stillMountedRef.current) {
+        setRedirGame('');
+      }
       resetStore();
       history.replace(`/game/${encodeURIComponent(redirGame)}`);
     }
   }, [history, redirGame, resetStore, setRedirGame]);
 
   const disconnectSocket = useCallback(() => {
-    setShouldDisconnect(true);
+    if (stillMountedRef.current) {
+      setShouldDisconnect(true);
+    }
     setTimeout(() => {
       // reconnect after 5 seconds.
-      setShouldDisconnect(false);
+      if (stillMountedRef.current) {
+        setShouldDisconnect(false);
+      }
     }, 5000);
   }, []);
 
@@ -72,11 +78,17 @@ const App = React.memo(() => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const setLiwordsSocketValuesIfStillMounted = useCallback((v) => {
+    if (stillMountedRef.current) {
+      setLiwordsSocketValues(v);
+    }
+  }, []);
+
   return (
     <div className="App">
       <LiwordsSocket
         disconnect={shouldDisconnect}
-        setValues={setLiwordsSocketValues}
+        setValues={setLiwordsSocketValuesIfStillMounted}
       />
       <Switch>
         <Route path="/" exact>

@@ -253,14 +253,16 @@ export const UserProfile = React.memo((props: Props) => {
       .catch(errorCatcher);
   }, [username, recentGamesOffset]);
 
-  const fetchPrev = useCallback(
-    () => setRecentGamesOffset(Math.max(recentGamesOffset - gamesPageSize, 0)),
-    [recentGamesOffset]
-  );
-  const fetchNext = useCallback(
-    () => setRecentGamesOffset(recentGamesOffset + gamesPageSize),
-    [recentGamesOffset]
-  );
+  const fetchPrev = useCallback(() => {
+    if (stillMountedRef.current) {
+      setRecentGamesOffset(Math.max(recentGamesOffset - gamesPageSize, 0));
+    }
+  }, [recentGamesOffset]);
+  const fetchNext = useCallback(() => {
+    if (stillMountedRef.current) {
+      setRecentGamesOffset(recentGamesOffset + gamesPageSize);
+    }
+  }, [recentGamesOffset]);
 
   return (
     <>

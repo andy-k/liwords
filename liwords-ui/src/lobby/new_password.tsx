@@ -33,10 +33,14 @@ export const NewPassword = (props: Props) => {
 
   const onFinish = (values: { [key: string]: string }) => {
     if (values.newPassword !== values.confirmnewPassword) {
-      setErr('New passwords must match');
+      if (stillMountedRef.current) {
+        setErr('New passwords must match');
+      }
       return;
     }
-    setErr('');
+    if (stillMountedRef.current) {
+      setErr('');
+    }
     axios
       .post(
         toAPIUrl('user_service.AuthenticationService', 'ResetPasswordStep2'),

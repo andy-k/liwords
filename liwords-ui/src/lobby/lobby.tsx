@@ -82,6 +82,9 @@ type Props = {
 };
 
 export const Lobby = (props: Props) => {
+  const stillMountedRef = React.useRef(true);
+  React.useEffect(() => () => void (stillMountedRef.current = false), []);
+
   const { sendSocketMsg } = props;
   const { chat } = useChatStoreContext();
   const { loginState } = useLoginStateStoreContext();
@@ -93,7 +96,9 @@ export const Lobby = (props: Props) => {
   );
 
   useEffect(() => {
-    setSelectedGameTab(loggedIn ? 'PLAY' : 'WATCH');
+    if (stillMountedRef.current) {
+      setSelectedGameTab(loggedIn ? 'PLAY' : 'WATCH');
+    }
   }, [loggedIn]);
 
   const handleNewGame = useCallback(
@@ -121,6 +126,12 @@ export const Lobby = (props: Props) => {
     [sendSocketMsg]
   );
 
+  const setSelectedGameTabIfStillMounted = useCallback((v) => {
+    if (stillMountedRef.current) {
+      setSelectedGameTab(v);
+    }
+  }, []);
+
   return (
     <>
       <TopBar />
@@ -141,7 +152,7 @@ export const Lobby = (props: Props) => {
           username={username}
           newGame={handleNewGame}
           selectedGameTab={selectedGameTab}
-          setSelectedGameTab={setSelectedGameTab}
+          setSelectedGameTab={setSelectedGameTabIfStillMounted}
           onSeekSubmit={onSeekSubmit}
         />
         <div className="announcements">

@@ -127,6 +127,9 @@ const gcgExport = (gameID: string, playerMeta: Array<PlayerMetadata>) => {
 };
 
 export const BoardPanel = React.memo((props: Props) => {
+  const stillMountedRef = React.useRef(true);
+  React.useEffect(() => () => void (stillMountedRef.current = false), []);
+
   const [drawingKeyMode, setDrawingKeyMode] = useState(false);
   const {
     drawingCanBeEnabled,
@@ -241,15 +244,19 @@ export const BoardPanel = React.memo((props: Props) => {
   );
 
   const recallTiles = useCallback(() => {
-    setPlacedTilesTempScore(0);
-    setPlacedTiles(new Set<EphemeralTile>());
-    setDisplayedRack(props.currentRack);
+    if (stillMountedRef.current) {
+      setPlacedTilesTempScore(0);
+      setPlacedTiles(new Set<EphemeralTile>());
+      setDisplayedRack(props.currentRack);
+    }
   }, [props.currentRack]);
 
   const shuffleTiles = useCallback(() => {
-    setPlacedTilesTempScore(0);
-    setPlacedTiles(new Set<EphemeralTile>());
-    setDisplayedRack(shuffleString(props.currentRack));
+    if (stillMountedRef.current) {
+      setPlacedTilesTempScore(0);
+      setPlacedTiles(new Set<EphemeralTile>());
+      setDisplayedRack(shuffleString(props.currentRack));
+    }
   }, [props.currentRack]);
 
   const lastLettersRef = useRef<string>();
@@ -328,10 +335,12 @@ export const BoardPanel = React.memo((props: Props) => {
       }
     }
     if (fullReset) {
-      setDisplayedRack(props.currentRack);
-      setPlacedTiles(new Set<EphemeralTile>());
-      setPlacedTilesTempScore(0);
-      setArrowProperties({ row: 0, col: 0, horizontal: false, show: false });
+      if (stillMountedRef.current) {
+        setDisplayedRack(props.currentRack);
+        setPlacedTiles(new Set<EphemeralTile>());
+        setPlacedTilesTempScore(0);
+        setArrowProperties({ row: 0, col: 0, horizontal: false, show: false });
+      }
     }
     lastLettersRef.current = props.board.letters;
   }, [isExamining, props.board.letters, props.currentRack]);
@@ -355,7 +364,9 @@ export const BoardPanel = React.memo((props: Props) => {
       }, 0) - 7;
     // Subtract 7 for opponent rack, won't matter when the
     // rack is smaller than that because past the threshold by then
-    setexchangeAllowed(tilesRemaining >= 7);
+    if (stillMountedRef.current) {
+      setexchangeAllowed(tilesRemaining >= 7);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gameContext.pool]);
   useEffect(() => {
@@ -430,7 +441,9 @@ export const BoardPanel = React.memo((props: Props) => {
         // If there is a tile on this square, ignore the click.
         return;
       }
-      setArrowProperties(nextArrowPropertyState(arrowProperties, row, col));
+      if (stillMountedRef.current) {
+        setArrowProperties(nextArrowPropertyState(arrowProperties, row, col));
+      }
     },
     [arrowProperties, props.board]
   );
@@ -464,7 +477,9 @@ export const BoardPanel = React.memo((props: Props) => {
         }
         if (key === '4' && exchangeAllowed) {
           evt.preventDefault();
-          setExchangeModalVisible(true);
+          if (stillMountedRef.current) {
+            setExchangeModalVisible(true);
+          }
           return;
         }
         if (key === '$' && exchangeAllowed) {
@@ -475,10 +490,12 @@ export const BoardPanel = React.memo((props: Props) => {
       }
       if (key === 'ArrowLeft' || key === 'ArrowRight') {
         evt.preventDefault();
-        setArrowProperties({
-          ...arrowProperties,
-          horizontal: !arrowProperties.horizontal,
-        });
+        if (stillMountedRef.current) {
+          setArrowProperties({
+            ...arrowProperties,
+            horizontal: !arrowProperties.horizontal,
+          });
+        }
         return;
       }
       if (key === 'ArrowDown') {
@@ -520,10 +537,12 @@ export const BoardPanel = React.memo((props: Props) => {
         return;
       }
       evt.preventDefault();
-      setDisplayedRack(handlerReturn.newDisplayedRack);
-      setArrowProperties(handlerReturn.newArrow);
-      setPlacedTiles(handlerReturn.newPlacedTiles);
-      setPlacedTilesTempScore(handlerReturn.playScore);
+      if (stillMountedRef.current) {
+        setDisplayedRack(handlerReturn.newDisplayedRack);
+        setArrowProperties(handlerReturn.newArrow);
+        setPlacedTiles(handlerReturn.newPlacedTiles);
+        setPlacedTilesTempScore(handlerReturn.playScore);
+      }
     },
     [
       arrowProperties,
@@ -561,12 +580,16 @@ export const BoardPanel = React.memo((props: Props) => {
       if (handlerReturn === null) {
         return;
       }
-      setDisplayedRack(handlerReturn.newDisplayedRack);
-      setPlacedTiles(handlerReturn.newPlacedTiles);
-      setPlacedTilesTempScore(handlerReturn.playScore);
-      setArrowProperties({ row: 0, col: 0, horizontal: false, show: false });
+      if (stillMountedRef.current) {
+        setDisplayedRack(handlerReturn.newDisplayedRack);
+        setPlacedTiles(handlerReturn.newPlacedTiles);
+        setPlacedTilesTempScore(handlerReturn.playScore);
+        setArrowProperties({ row: 0, col: 0, horizontal: false, show: false });
+      }
       if (handlerReturn.isUndesignated) {
-        setBlankModalVisible(true);
+        if (stillMountedRef.current) {
+          setBlankModalVisible(true);
+        }
       }
     },
     [displayedRack, placedTiles, props.board]
@@ -593,11 +616,15 @@ export const BoardPanel = React.memo((props: Props) => {
       if (handlerReturn === null) {
         return;
       }
-      setDisplayedRack(handlerReturn.newDisplayedRack);
-      setPlacedTiles(handlerReturn.newPlacedTiles);
-      setPlacedTilesTempScore(handlerReturn.playScore);
+      if (stillMountedRef.current) {
+        setDisplayedRack(handlerReturn.newDisplayedRack);
+        setPlacedTiles(handlerReturn.newPlacedTiles);
+        setPlacedTilesTempScore(handlerReturn.playScore);
+      }
       if (handlerReturn.isUndesignated) {
-        setBlankModalVisible(true);
+        if (stillMountedRef.current) {
+          setBlankModalVisible(true);
+        }
       }
       let newrow = arrowProperties.row;
       let newcol = arrowProperties.col;
@@ -619,12 +646,14 @@ export const BoardPanel = React.memo((props: Props) => {
           props.board.letterAt(newrow, newcol) !== EmptySpace
         );
       }
-      setArrowProperties({
-        col: newcol,
-        horizontal: arrowProperties.horizontal,
-        show: !(newcol === props.board.dim || newrow === props.board.dim),
-        row: newrow,
-      });
+      if (stillMountedRef.current) {
+        setArrowProperties({
+          col: newcol,
+          horizontal: arrowProperties.horizontal,
+          show: !(newcol === props.board.dim || newrow === props.board.dim),
+          row: newrow,
+        });
+      }
     },
     [
       arrowProperties.col,
@@ -639,7 +668,9 @@ export const BoardPanel = React.memo((props: Props) => {
 
   const handleBoardTileClick = useCallback((rune: string) => {
     if (rune === Blank) {
-      setBlankModalVisible(true);
+      if (stillMountedRef.current) {
+        setBlankModalVisible(true);
+      }
     }
   }, []);
 
@@ -654,15 +685,19 @@ export const BoardPanel = React.memo((props: Props) => {
       if (handlerReturn === null) {
         return;
       }
-      setBlankModalVisible(false);
-      setPlacedTiles(handlerReturn.newPlacedTiles);
-      setPlacedTilesTempScore(handlerReturn.playScore);
+      if (stillMountedRef.current) {
+        setBlankModalVisible(false);
+        setPlacedTiles(handlerReturn.newPlacedTiles);
+        setPlacedTilesTempScore(handlerReturn.playScore);
+      }
     },
     [displayedRack, placedTiles, props.board]
   );
 
   const handleBlankModalCancel = useCallback(() => {
-    setBlankModalVisible(false);
+    if (stillMountedRef.current) {
+      setBlankModalVisible(false);
+    }
   }, []);
 
   const returnToRack = useCallback(
@@ -677,10 +712,12 @@ export const BoardPanel = React.memo((props: Props) => {
       if (handlerReturn === null) {
         return;
       }
-      setDisplayedRack(handlerReturn.newDisplayedRack);
-      setPlacedTiles(handlerReturn.newPlacedTiles);
-      setPlacedTilesTempScore(handlerReturn.playScore);
-      setArrowProperties({ row: 0, col: 0, horizontal: false, show: false });
+      if (stillMountedRef.current) {
+        setDisplayedRack(handlerReturn.newDisplayedRack);
+        setPlacedTiles(handlerReturn.newPlacedTiles);
+        setPlacedTilesTempScore(handlerReturn.playScore);
+        setArrowProperties({ row: 0, col: 0, horizontal: false, show: false });
+      }
     },
     [displayedRack, placedTiles, props.board]
   );
@@ -691,20 +728,26 @@ export const BoardPanel = React.memo((props: Props) => {
         const newRack = displayedRack.split('');
         newRack.splice(oldIndex, 1);
         newRack.splice(newIndex, 0, displayedRack[oldIndex]);
-        setPlacedTilesTempScore(0);
-        setDisplayedRack(newRack.join(''));
+        if (stillMountedRef.current) {
+          setPlacedTilesTempScore(0);
+          setDisplayedRack(newRack.join(''));
+        }
       }
     },
     [displayedRack]
   );
 
   const showExchangeModal = useCallback(() => {
-    setExchangeModalVisible(true);
+    if (stillMountedRef.current) {
+      setExchangeModalVisible(true);
+    }
   }, []);
 
   const handleExchangeModalOk = useCallback(
     (exchangedTiles: string) => {
-      setExchangeModalVisible(false);
+      if (stillMountedRef.current) {
+        setExchangeModalVisible(false);
+      }
       makeMove('exchange', exchangedTiles);
     },
     [makeMove]
@@ -749,12 +792,16 @@ export const BoardPanel = React.memo((props: Props) => {
           } else {
             if (drawingKeyMode) {
               e.preventDefault();
-              setDrawingKeyMode(false);
+              if (stillMountedRef.current) {
+                setDrawingKeyMode(false);
+              }
               handleDrawingKeyDown(e);
               return;
             } else if (e.key === '0') {
               e.preventDefault();
-              setDrawingKeyMode(true);
+              if (stillMountedRef.current) {
+                setDrawingKeyMode(true);
+              }
               console.log(
                 'You pressed 0. Now press one of these keys:' +
                   '\n0 = Toggle drawing' +
@@ -804,7 +851,9 @@ export const BoardPanel = React.memo((props: Props) => {
     [props.gameID, props.playerMeta]
   );
   const handleExchangeTilesCancel = useCallback(() => {
-    setExchangeModalVisible(false);
+    if (stillMountedRef.current) {
+      setExchangeModalVisible(false);
+    }
   }, []);
 
   return (

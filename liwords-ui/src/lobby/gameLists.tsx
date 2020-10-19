@@ -84,10 +84,12 @@ export const GameLists = React.memo((props: Props) => {
     );
   };
   const onFormSubmit = (sg: SoughtGame) => {
-    setSeekModalVisible(false);
-    setMatchModalVisible(false);
-    setBotModalVisible(false);
-    setFormDisabled(true);
+    if (stillMountedRef.current) {
+      setSeekModalVisible(false);
+      setMatchModalVisible(false);
+      setBotModalVisible(false);
+      setFormDisabled(true);
+    }
     if (!formDisabled) {
       onSeekSubmit(sg);
       setTimeout(() => {
@@ -103,14 +105,18 @@ export const GameLists = React.memo((props: Props) => {
       className="seek-modal"
       visible={seekModalVisible}
       onCancel={() => {
-        setSeekModalVisible(false);
-        setFormDisabled(false);
+        if (stillMountedRef.current) {
+          setSeekModalVisible(false);
+          setFormDisabled(false);
+        }
       }}
       footer={[
         <Button
           key="back"
           onClick={() => {
-            setSeekModalVisible(false);
+            if (stillMountedRef.current) {
+              setSeekModalVisible(false);
+            }
           }}
         >
           Cancel
@@ -140,14 +146,18 @@ export const GameLists = React.memo((props: Props) => {
       title="Match a Friend"
       visible={matchModalVisible}
       onCancel={() => {
-        setMatchModalVisible(false);
-        setFormDisabled(false);
+        if (stillMountedRef.current) {
+          setMatchModalVisible(false);
+          setFormDisabled(false);
+        }
       }}
       footer={[
         <Button
           key="back"
           onClick={() => {
-            setMatchModalVisible(false);
+            if (stillMountedRef.current) {
+              setMatchModalVisible(false);
+            }
           }}
         >
           Cancel
@@ -177,14 +187,18 @@ export const GameLists = React.memo((props: Props) => {
       visible={botModalVisible}
       className="seek-modal"
       onCancel={() => {
-        setBotModalVisible(false);
-        setFormDisabled(false);
+        if (stillMountedRef.current) {
+          setBotModalVisible(false);
+          setFormDisabled(false);
+        }
       }}
       footer={[
         <Button
           key="back"
           onClick={() => {
-            setBotModalVisible(false);
+            if (stillMountedRef.current) {
+              setBotModalVisible(false);
+            }
           }}
         >
           Cancel
@@ -229,7 +243,9 @@ export const GameLists = React.memo((props: Props) => {
         <div
           className="bot"
           onClick={() => {
-            setBotModalVisible(true);
+            if (stillMountedRef.current) {
+              setBotModalVisible(true);
+            }
           }}
         >
           Play a bot
@@ -239,7 +255,9 @@ export const GameLists = React.memo((props: Props) => {
         <div
           className="match"
           onClick={() => {
-            setMatchModalVisible(true);
+            if (stillMountedRef.current) {
+              setMatchModalVisible(true);
+            }
           }}
         >
           Match a friend
@@ -249,7 +267,9 @@ export const GameLists = React.memo((props: Props) => {
         <div
           className="seek"
           onClick={() => {
-            setSeekModalVisible(true);
+            if (stillMountedRef.current) {
+              setSeekModalVisible(true);
+            }
           }}
         >
           New game

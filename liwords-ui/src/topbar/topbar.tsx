@@ -51,6 +51,9 @@ const TopMenu = React.memo((props: Props) => {
 type Props = {};
 
 export const TopBar = React.memo((props: Props) => {
+  const stillMountedRef = React.useRef(true);
+  React.useEffect(() => () => void (stillMountedRef.current = false), []);
+
   const { currentLagMs } = useLagStoreContext();
   const { loginState } = useLoginStateStoreContext();
   const { resetStore } = useResetStoreContext();
@@ -132,7 +135,14 @@ export const TopBar = React.memo((props: Props) => {
           </div>
         ) : (
           <div className="user-info">
-            <button className="link" onClick={() => setLoginModalVisible(true)}>
+            <button
+              className="link"
+              onClick={() => {
+                if (stillMountedRef.current) {
+                  setLoginModalVisible(true);
+                }
+              }}
+            >
               Log In
             </button>
             <Link
@@ -148,7 +158,9 @@ export const TopBar = React.memo((props: Props) => {
               title="Welcome back, friend!"
               visible={loginModalVisible}
               onCancel={() => {
-                setLoginModalVisible(false);
+                if (stillMountedRef.current) {
+                  setLoginModalVisible(false);
+                }
               }}
               footer={null}
               width={332}

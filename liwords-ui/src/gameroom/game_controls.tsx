@@ -165,6 +165,9 @@ type EGCProps = {
 };
 
 const EndGameControls = (props: EGCProps) => {
+  const stillMountedRef = React.useRef(true);
+  React.useEffect(() => () => void (stillMountedRef.current = false), []);
+
   const [rematchDisabled, setRematchDisabled] = useState(false);
   const { resetStore } = useResetStoreContext();
   const history = useHistory();
@@ -184,7 +187,9 @@ const EndGameControls = (props: EGCProps) => {
           type="primary"
           data-testid="rematch-button"
           onClick={() => {
-            setRematchDisabled(true);
+            if (stillMountedRef.current) {
+              setRematchDisabled(true);
+            }
             if (!rematchDisabled) {
               props.onRematch();
             }

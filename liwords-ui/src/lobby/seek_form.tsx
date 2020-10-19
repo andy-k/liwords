@@ -129,13 +129,17 @@ export const SeekForm = (props: Props) => {
       localStorage.setItem(storageKey, JSON.stringify(allvals));
     }
     if (allvals.incOrOT === 'increment') {
-      setTimeSetting(incLabel);
-      setMaxTimeSetting(60);
-      setExtraTimeLabel(incUnitLabel);
+      if (stillMountedRef.current) {
+        setTimeSetting(incLabel);
+        setMaxTimeSetting(60);
+        setExtraTimeLabel(incUnitLabel);
+      }
     } else {
-      setTimeSetting(otLabel);
-      setMaxTimeSetting(10);
-      setExtraTimeLabel(otUnitLabel);
+      if (stillMountedRef.current) {
+        setTimeSetting(otLabel);
+        setMaxTimeSetting(10);
+        setExtraTimeLabel(otUnitLabel);
+      }
     }
     const [tc, tt] = timeCtrlToDisplayName(
       timeScaleToNum(initTimeDiscreteScale[allvals.initialtime]) * 60,
@@ -146,8 +150,10 @@ export const SeekForm = (props: Props) => {
         ? 0
         : Math.round(allvals.extratime as number)
     );
-    setTimectrl(tc);
-    setTtag(tt);
+    if (stillMountedRef.current) {
+      setTimectrl(tc);
+      setTtag(tt);
+    }
   };
 
   const onUsernameSearch = (searchText: string) => {
@@ -211,8 +217,16 @@ export const SeekForm = (props: Props) => {
             style={{
               width: 200,
             }}
-            onFocus={() => setSliderTooltipVisible(false)}
-            onBlur={() => setSliderTooltipVisible(true)}
+            onFocus={() => {
+              if (stillMountedRef.current) {
+                setSliderTooltipVisible(false);
+              }
+            }}
+            onBlur={() => {
+              if (stillMountedRef.current) {
+                setSliderTooltipVisible(true);
+              }
+            }}
           >
             {usernameOptions.map((username) => (
               <AutoComplete.Option key={username} value={username}>
