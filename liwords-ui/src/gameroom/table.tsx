@@ -138,7 +138,7 @@ export const Table = React.memo((props: Props) => {
 
   useEffect(() => {
     if (gameContext.playState === PlayState.GAME_OVER || isObserver) {
-      return () => {};
+      return;
     }
 
     const evtHandler = (evt: BeforeUnloadEvent) => {

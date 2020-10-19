@@ -255,14 +255,18 @@ export const UserProfile = React.memo((props: Props) => {
 
   const fetchPrev = useCallback(() => {
     if (stillMountedRef.current) {
-      setRecentGamesOffset(Math.max(recentGamesOffset - gamesPageSize, 0));
+      setRecentGamesOffset((recentGamesOffset) =>
+        Math.max(recentGamesOffset - gamesPageSize, 0)
+      );
     }
-  }, [recentGamesOffset]);
+  }, []);
   const fetchNext = useCallback(() => {
     if (stillMountedRef.current) {
-      setRecentGamesOffset(recentGamesOffset + gamesPageSize);
+      setRecentGamesOffset(
+        (recentGamesOffset) => recentGamesOffset + gamesPageSize
+      );
     }
-  }, [recentGamesOffset]);
+  }, []);
 
   return (
     <>
