@@ -2,6 +2,9 @@ package game
 
 import (
 	"context"
+	"fmt"
+	"regexp"
+	"runtime"
 	"sync"
 	"time"
 
@@ -9,6 +12,7 @@ import (
 	gs "github.com/domino14/liwords/rpc/api/proto/game_service"
 	pb "github.com/domino14/liwords/rpc/api/proto/realtime"
 	lru "github.com/hashicorp/golang-lru"
+	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
 
@@ -91,6 +95,8 @@ func (c *Cache) SetGameEventChan(ch chan<- *entity.EventWrapper) {
 	c.backing.SetGameEventChan(ch)
 }
 
+var reBrackets = regexp.MustCompile(`\[[^]]*\]`)
+
 // Get gets a game from the cache.. it loads it into the cache if it's not there.
 func (c *Cache) Get(ctx context.Context, id string) (*entity.Game, error) {
 	g, ok := c.cache.Get(id)
@@ -101,6 +107,24 @@ func (c *Cache) Get(ctx context.Context, id string) (*entity.Game, error) {
 	uncachedGame, err := c.backing.Get(ctx, id)
 	if err == nil {
 		c.cache.Add(id, uncachedGame)
+
+		func() {
+			lv := zerolog.GlobalLevel()
+			log.Info().Int("log-level", int(lv)).Msg("pause-log")
+			defer log.Info().Int("log-level", int(lv)).Msg("restore-log")
+			zerolog.SetGlobalLevel(zerolog.Disabled)
+			defer zerolog.SetGlobalLevel(lv)
+
+			for i := 0; i < CacheCap+100; i++ {
+				anotherCopyOfGame, err := c.backing.Get(ctx, id)
+				_ = err
+				var m runtime.MemStats
+				runtime.ReadMemStats(&m)
+				s := fmt.Sprintf("CACHE STUFFS: %d %d %+v", i, c.cache.Len(), m)
+				fmt.Println(reBrackets.ReplaceAllString(s, "[...]"))
+				c.cache.Add(id+"_"+string(i), anotherCopyOfGame)
+			}
+		}()
 	}
 	return uncachedGame, err
 
