@@ -182,6 +182,11 @@ export const getMacondo = async (lexicon: string) =>
         }
         try {
           return await pendings[id].promise;
+        } catch (e) {
+          if (!(e instanceof Error)) {
+            throw new Error(e); // Adorn with stack trace here.
+          }
+          throw e;
         } finally {
           delete pendings[id];
         }
