@@ -156,13 +156,13 @@ export const getMacondo = async (lexicon: string) =>
         worker.onmessage = (msg) => {
           if (msg.data[0] === 'response') {
             // ["response", id, true, resp]
-            // ["response", id, false] (error)
+            // ["response", id, false, e] (error)
             const pending = pendings[msg.data[1]];
             if (pending) {
               if (msg.data[2]) {
                 pending.res!(msg.data[3]);
               } else {
-                pending.rej!(undefined);
+                pending.rej!(msg.data[3]);
               }
             }
           } else if (msg.data[0] === 'getMacondo') {

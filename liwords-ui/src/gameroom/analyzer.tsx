@@ -109,7 +109,7 @@ export const analyzerMoveFromJsonMove = (
 };
 
 const AnalyzerContext = React.createContext<{
-  cachedMoves: Array<AnalyzerMove> | null;
+  cachedMoves: Array<AnalyzerMove> | null | undefined;
   examinerLoading: boolean;
   requestAnalysis: (lexicon: string) => void;
   showMovesForTurn: number;
@@ -130,7 +130,7 @@ export const AnalyzerContextProvider = ({
   const { useState } = useMountedState();
 
   const [movesCache, setMovesCache] = useState<
-    Array<Array<AnalyzerMove> | null>
+    Array<Array<AnalyzerMove> | null | undefined>
   >([]);
   const [showMovesForTurn, setShowMovesForTurn] = useState(-1);
   const [unrace, setUnrace] = useState(new Unrace());
@@ -178,7 +178,18 @@ export const AnalyzerContextProvider = ({
         if (examinerIdAtStart !== examinerId.current) return;
 
         const boardStr = JSON.stringify(boardObj);
-        const movesStr = await macondo.analyze(boardStr);
+        let movesStr;
+        try {
+          movesStr = await macondo.analyze(boardStr);
+        } catch (e) {
+          console.error('macondo error', e);
+          setMovesCache((oldMovesCache) => {
+            const ret = [...oldMovesCache];
+            ret[turn] = undefined;
+            return ret;
+          });
+          return;
+        }
         if (examinerIdAtStart !== examinerId.current) return;
         const movesObj = JSON.parse(movesStr) as Array<JsonMove>;
 

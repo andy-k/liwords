@@ -75,7 +75,7 @@
           const ret = await doReq(msg.data[2]);
           postMessage(['response', msg.data[1], true, ret]);
         } catch (e) {
-          postMessage(['response', msg.data[1], false]);
+          postMessage(['response', msg.data[1], false, e]);
         }
       })();
     } else if (msg.data[0] === 'getMacondo') {
