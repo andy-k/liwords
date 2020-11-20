@@ -180,7 +180,12 @@ export const AnalyzerContextProvider = ({
         const boardStr = JSON.stringify(boardObj);
         let movesStr;
         try {
-          movesStr = await macondo.analyze(boardStr);
+          const analyzerId = await macondo.newAnalyzer();
+          try {
+            movesStr = await macondo.analyzerAnalyze(analyzerId, boardStr);
+          } finally {
+            await macondo.delAnalyzer(analyzerId);
+          }
         } catch (e) {
           console.error('macondo error', e);
           setMovesCache((oldMovesCache) => {

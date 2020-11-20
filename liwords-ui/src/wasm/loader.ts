@@ -97,7 +97,9 @@ const unrace = new Unrace();
 export interface Macondo {
   loadLexicon: (lexicon: string) => Promise<unknown>;
   precache: (loadable: Loadable) => Promise<unknown>;
-  analyze: (jsonBoard: string) => Promise<string>;
+  newAnalyzer: () => Promise<number>;
+  delAnalyzer: (analyzerId: number) => Promise<unknown>;
+  analyzerAnalyze: (analyzerId: number, jsonBoard: string) => Promise<string>;
 }
 
 let wrappedWorker: Macondo;
@@ -211,8 +213,20 @@ export const getMacondo = async (lexicon: string) =>
           }
         };
 
-        analyze = async (jsonBoard: string) => {
-          return (await sendRequest(['analyze', jsonBoard])) as string;
+        newAnalyzer = async () => {
+          return (await sendRequest(['newAnalyzer'])) as number;
+        };
+
+        delAnalyzer = async (analyzerId: number) => {
+          return await sendRequest(['delAnalyzer', analyzerId]);
+        };
+
+        analyzerAnalyze = async (analyzerId: number, jsonBoard: string) => {
+          return (await sendRequest([
+            'analyzerAnalyze',
+            analyzerId,
+            jsonBoard,
+          ])) as string;
         };
       }
 

@@ -58,10 +58,14 @@
   };
 
   const doReq = async (req) => {
-    if (req[0] === 'analyze') {
-      return await (await getMacondo()).analyze(req[1]);
-    } else if (req[0] === 'precache') {
+    if (req[0] === 'precache') {
       return await precache(await getMacondo(), req[1], req[2], req[3]);
+    } else if (req[0] === 'newAnalyzer') {
+      return await (await getMacondo()).newAnalyzer();
+    } else if (req[0] === 'delAnalyzer') {
+      return await (await getMacondo()).delAnalyzer(req[1]);
+    } else if (req[0] === 'analyzerAnalyze') {
+      return await (await getMacondo()).analyzerAnalyze(req[1], req[2]);
     } else {
       throw new Error('unknown request');
     }
