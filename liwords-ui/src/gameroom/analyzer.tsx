@@ -20,7 +20,6 @@ import { Unrace } from '../utils/unrace';
 type AnalyzerProps = {
   includeCard?: boolean;
   style?: React.CSSProperties;
-  lexicon: string;
 };
 
 // See analyzer/analyzer.go JsonMove.
@@ -111,24 +110,27 @@ export const analyzerMoveFromJsonMove = (
 const AnalyzerContext = React.createContext<{
   cachedMoves: Array<AnalyzerMove> | null | undefined;
   examinerLoading: boolean;
-  requestAnalysis: (lexicon: string) => void;
+  requestAnalysis: () => void;
   showMovesForTurn: number;
   setShowMovesForTurn: (a: number) => void;
 }>({
   cachedMoves: null,
   examinerLoading: false,
-  requestAnalysis: (lexicon: string) => {},
+  requestAnalysis: () => {},
   showMovesForTurn: -1,
   setShowMovesForTurn: (a: number) => {},
 });
 
 export const AnalyzerContextProvider = ({
   children,
+  lexicon,
 }: {
   children: React.ReactNode;
+  lexicon: string;
 }) => {
   const { useState } = useMountedState();
 
+  const analyzerIds = useRef<Array<number | undefined>>([]);
   const [movesCache, setMovesCache] = useState<
     Array<Array<AnalyzerMove> | null | undefined>
   >([]);
@@ -139,77 +141,124 @@ export const AnalyzerContextProvider = ({
     gameContext: examinableGameContext,
   } = useExaminableGameContextStoreContext();
 
+  const disposeOfAnalyzers = useCallback(async () => {
+    const ar = analyzerIds.current;
+    let macondo;
+    for (const idx in ar) {
+      const analyzerId = ar[idx];
+      if (analyzerId != null) {
+        if (macondo == null) {
+          macondo = await getMacondo(lexicon);
+        }
+        await macondo.delAnalyzer(analyzerId);
+      }
+      delete ar[idx];
+    }
+    ar.length = 0;
+  }, [lexicon]);
+
   const examinerId = useRef(0);
   useEffect(() => {
     examinerId.current = (examinerId.current + 1) | 0;
+    disposeOfAnalyzers();
     setMovesCache([]);
     setUnrace(new Unrace());
-  }, [examinableGameContext.gameID]);
+  }, [examinableGameContext.gameID, disposeOfAnalyzers]);
 
-  const requestAnalysis = useCallback(
-    (lexicon) => {
+  useEffect(() => {
+    return () => {
+      disposeOfAnalyzers();
+    };
+  }, [disposeOfAnalyzers]);
+
+  const analyzerIdForTurn = useCallback(
+    async (turn) => {
       const examinerIdAtStart = examinerId.current;
-      const turn = examinableGameContext.turns.length;
-      // null = loading. undefined = not yet requested.
-      if (movesCache[turn] !== undefined) return;
-      setMovesCache((oldMovesCache) => {
-        const ret = [...oldMovesCache];
-        ret[turn] = null;
-        return ret;
-      });
-
-      unrace.run(async () => {
-        const {
-          board: { dim, letters },
-          onturn,
-          players,
-        } = examinableGameContext;
-
-        const boardObj = {
-          size: dim,
-          rack: players[onturn].currentRack,
-          board: Array.from(new Array(dim), (_, row) =>
-            letters.substr(row * dim, dim)
-          ),
-          lexicon,
-        };
-
-        const macondo = await getMacondo(lexicon);
-        if (examinerIdAtStart !== examinerId.current) return;
-
-        const boardStr = JSON.stringify(boardObj);
-        let movesStr;
-        try {
-          const analyzerId = await macondo.newAnalyzer();
-          try {
-            movesStr = await macondo.analyzerAnalyze(analyzerId, boardStr);
-          } finally {
-            await macondo.delAnalyzer(analyzerId);
-          }
-        } catch (e) {
-          console.error('macondo error', e);
-          setMovesCache((oldMovesCache) => {
-            const ret = [...oldMovesCache];
-            ret[turn] = undefined;
-            return ret;
-          });
-          return;
+      let analyzerId = analyzerIds.current[turn];
+      if (analyzerId != null) return analyzerId;
+      const macondo = await getMacondo(lexicon);
+      if (examinerIdAtStart !== examinerId.current) {
+        throw new Error('context invalidated');
+      }
+      analyzerId = await macondo.newAnalyzer();
+      let keepTheAnalyzer = false;
+      try {
+        if (examinerIdAtStart !== examinerId.current) {
+          throw new Error('context invalidated');
         }
-        if (examinerIdAtStart !== examinerId.current) return;
-        const movesObj = JSON.parse(movesStr) as Array<JsonMove>;
+        if (analyzerIds.current[turn] != null)
+          return analyzerIds.current[turn]!;
+        analyzerIds.current[turn] = analyzerId;
+        keepTheAnalyzer = true;
+        return analyzerId;
+      } finally {
+        if (!keepTheAnalyzer) {
+          await macondo.delAnalyzer(analyzerId);
+        }
+      }
+    },
+    [lexicon]
+  );
 
-        const formattedMoves = movesObj.map((move) =>
-          analyzerMoveFromJsonMove(move, dim, letters)
+  const requestAnalysis = useCallback(() => {
+    const examinerIdAtStart = examinerId.current;
+    const turn = examinableGameContext.turns.length;
+    // null = loading. undefined = not yet requested.
+    if (movesCache[turn] !== undefined) return;
+    setMovesCache((oldMovesCache) => {
+      const ret = [...oldMovesCache];
+      ret[turn] = null;
+      return ret;
+    });
+
+    unrace.run(async () => {
+      const {
+        board: { dim, letters },
+        onturn,
+        players,
+      } = examinableGameContext;
+
+      const boardObj = {
+        size: dim,
+        rack: players[onturn].currentRack,
+        board: Array.from(new Array(dim), (_, row) =>
+          letters.substr(row * dim, dim)
+        ),
+        lexicon,
+      };
+
+      const macondo = await getMacondo(lexicon);
+      if (examinerIdAtStart !== examinerId.current) return;
+
+      const boardStr = JSON.stringify(boardObj);
+      let movesStr;
+      try {
+        movesStr = await macondo.analyzerAnalyze(
+          await analyzerIdForTurn(turn),
+          boardStr
         );
+      } catch (e) {
+        console.error('macondo error', e);
         setMovesCache((oldMovesCache) => {
           const ret = [...oldMovesCache];
-          ret[turn] = formattedMoves;
+          ret[turn] = undefined;
           return ret;
         });
+        return;
+      }
+      if (examinerIdAtStart !== examinerId.current) return;
+      const movesObj = JSON.parse(movesStr) as Array<JsonMove>;
+
+      const formattedMoves = movesObj.map((move) =>
+        analyzerMoveFromJsonMove(move, dim, letters)
+      );
+      setMovesCache((oldMovesCache) => {
+        const ret = [...oldMovesCache];
+        ret[turn] = formattedMoves;
+        return ret;
       });
-    },
-    [examinableGameContext, movesCache, unrace]
-  );
+    });
+  }, [analyzerIdForTurn, examinableGameContext, lexicon, movesCache, unrace]);
 
   const cachedMoves = movesCache[examinableGameContext.turns.length];
   const examinerLoading = cachedMoves === null;
@@ -234,7 +283,6 @@ export const AnalyzerContextProvider = ({
 };
 
 export const Analyzer = React.memo((props: AnalyzerProps) => {
-  const { lexicon } = props;
   const {
     cachedMoves,
     examinerLoading,
@@ -306,10 +354,9 @@ export const Analyzer = React.memo((props: AnalyzerProps) => {
 
   const handleExaminer = useCallback(() => {
     setShowMovesForTurn(examinableGameContext.turns.length);
-    requestAnalysis(lexicon);
+    requestAnalysis();
   }, [
     examinableGameContext.turns.length,
-    lexicon,
     requestAnalysis,
     setShowMovesForTurn,
   ]);

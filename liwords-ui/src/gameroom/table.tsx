@@ -529,11 +529,7 @@ export const Table = React.memo((props: Props) => {
             presences={presences}
             peopleOnlineContext={peopleOnlineContext}
           />
-          {isExamining ? (
-            <Analyzer includeCard lexicon={gameInfo.lexicon} />
-          ) : (
-            <Notepad includeCard />
-          )}
+          {isExamining ? <Analyzer includeCard /> : <Notepad includeCard />}
         </div>
         {/* There are two player cards, css hides one of them. */}
         <div className="sticky-player-card-container">
@@ -582,7 +578,6 @@ export const Table = React.memo((props: Props) => {
             isExamining={isExamining}
             username={username}
             playing={us !== undefined}
-            lexicon={gameInfo.lexicon}
             events={examinableGameContext.turns}
             board={examinableGameContext.board}
             playerMeta={gameInfo.players}
@@ -593,6 +588,6 @@ export const Table = React.memo((props: Props) => {
     </div>
   );
   ret = <NotepadContextProvider children={ret} />;
-  ret = <AnalyzerContextProvider children={ret} />;
+  ret = <AnalyzerContextProvider lexicon={gameInfo.lexicon} children={ret} />;
   return ret;
 });
