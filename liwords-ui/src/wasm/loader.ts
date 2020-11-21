@@ -100,6 +100,9 @@ export interface Macondo {
   newAnalyzer: () => Promise<number>;
   delAnalyzer: (analyzerId: number) => Promise<unknown>;
   analyzerAnalyze: (analyzerId: number, jsonBoard: string) => Promise<string>;
+  simInit: (analyzerId: number) => Promise<unknown>;
+  simSingleThread: (analyzerId: number, iters: number) => Promise<unknown>;
+  simState: (analyzerId: number) => Promise<any>;
 }
 
 let wrappedWorker: Macondo;
@@ -227,6 +230,18 @@ export const getMacondo = async (lexicon: string) =>
             analyzerId,
             jsonBoard,
           ])) as string;
+        };
+
+        simInit = async (analyzerId: number) => {
+          return await sendRequest(['simInit', analyzerId]);
+        };
+
+        simSingleThread = async (analyzerId: number, iters: number) => {
+          return await sendRequest(['simSingleThread', analyzerId, iters]);
+        };
+
+        simState = async (analyzerId: number) => {
+          return await sendRequest(['simState', analyzerId]);
         };
       }
 

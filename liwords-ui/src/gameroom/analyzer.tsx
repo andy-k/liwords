@@ -267,6 +267,23 @@ export const AnalyzerContextProvider = ({
         ret[turn] = formattedMoves;
         return ret;
       });
+
+      {
+        const analyzerId = await analyzerIdForTurn(turn);
+        const t0 = performance.now();
+        await macondo.simInit(analyzerId);
+        const t1 = performance.now();
+        await macondo.simSingleThread(analyzerId, 50);
+        const t2 = performance.now();
+        const objStr = await macondo.simState(analyzerId);
+        const t3 = performance.now();
+        console.log(t1 - t0, 'to init');
+        console.log(t2 - t1, 'to sim');
+        console.log(t3 - t2, 'to get state');
+        const obj = JSON.parse(objStr);
+        console.log(obj.equity_stats);
+        console.log(obj.score_details);
+      }
     });
   }, [analyzerIdForTurn, examinableGameContext, lexicon, movesCache, unrace]);
 

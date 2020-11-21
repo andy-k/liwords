@@ -66,6 +66,12 @@
       return await (await getMacondo()).delAnalyzer(req[1]);
     } else if (req[0] === 'analyzerAnalyze') {
       return await (await getMacondo()).analyzerAnalyze(req[1], req[2]);
+    } else if (req[0] === 'simInit') {
+      return await (await getMacondo()).simInit(req[1]);
+    } else if (req[0] === 'simSingleThread') {
+      return await (await getMacondo()).simSingleThread(req[1], req[2]);
+    } else if (req[0] === 'simState') {
+      return await (await getMacondo()).simState(req[1]);
     } else {
       throw new Error('unknown request');
     }
