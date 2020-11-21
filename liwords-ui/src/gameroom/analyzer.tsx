@@ -227,6 +227,8 @@ export const AnalyzerContextProvider = ({
       } = examinableGameContext;
 
       const boardObj = {
+        scores: players.map((x) => x.score),
+        onturn,
         size: dim,
         rack: players[onturn].currentRack,
         board: Array.from(new Array(dim), (_, row) =>
