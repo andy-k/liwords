@@ -150,7 +150,11 @@ export const AnalyzerContextProvider = ({
         if (macondo == null) {
           macondo = await getMacondo(lexicon);
         }
-        await macondo.delAnalyzer(analyzerId);
+        try {
+          await macondo.delAnalyzer(analyzerId);
+        } catch (e) {
+          console.log(`cannot free memory for analyzer ${analyzerId}`, e);
+        }
       }
       delete ar[idx];
     }
@@ -193,7 +197,11 @@ export const AnalyzerContextProvider = ({
         return analyzerId;
       } finally {
         if (!keepTheAnalyzer) {
-          await macondo.delAnalyzer(analyzerId);
+          try {
+            await macondo.delAnalyzer(analyzerId);
+          } catch (e) {
+            console.log(`cannot free memory for analyzer ${analyzerId}`, e);
+          }
         }
       }
     },
